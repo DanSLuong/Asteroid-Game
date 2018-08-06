@@ -9,8 +9,10 @@ boolean leftPressed = false;
 float shipSpeed = 2;
 float bulletSpeed = 10;
 
-int numAsteroids = 2; //the number of asteroids
+int numAsteroids = 3; //the number of asteroids
 int startingRadius = 50; //the size of an asteroid
+int score; // The player's score for the level
+int timer; // The game timer
 
 
 PImage asteroidPic;
@@ -27,6 +29,7 @@ public final int INTRO = 1;
 public final int PLAY = 2;
 public final int PAUSE = 3;
 public final int GAMEOVER = 4;
+public final int LEVELCLEAR = 5;
 
 
 
@@ -48,6 +51,7 @@ void setup()
 
 void draw()
 {  
+  
   switch(gameState) 
   {
     case INTRO:
@@ -59,14 +63,24 @@ void draw()
     case GAMEOVER:
       drawScreen("GAME OVER", "Press s to try again");
       break;
+    case LEVELCLEAR:
+      drawScreen("LEVEL CLEARED", "Press s to try again");
+      break;
     case PLAY:
       background(0);
       
+      drawScore(score);
+      
       ship.update();
       ship.render(); 
-              
-      if(ship.checkCollision(asteroids) || asteroids.size() <=0)
+      
+      if(ship.checkCollision(asteroids) || timer <= 0)
              gameState = GAMEOVER;
+      // Determines the score required according to the number of asteroids in the level
+      else if ( asteroids.size() <=0 || score >= numAsteroids*40 )
+      {
+             gameState = LEVELCLEAR;
+      }
       else
       {                    
           for(int i = 0; i < bullets.size(); i++)
@@ -76,6 +90,7 @@ void draw()
     
             if(bullets.get(i).checkCollision(asteroids))
             {
+               score+=5;
                bullets.remove(i);
                i--;
             }                        
@@ -113,6 +128,8 @@ void initializeGame()
    ship  = new Ship();
    bullets = new ArrayList<Bullet>();   
    asteroids = new ArrayList<Asteroid>();
+   score = 0;
+   timer = 30;
    
    for(int i = 0; i <numAsteroids; i++)
    {
@@ -211,6 +228,15 @@ void drawScreen(String title, String instructions)
   text(instructions, width/2, height/2);
 }
 
+
+void drawScore(int score)
+{
+  background(0,0,0,0);
+  fill(255,255,255);
+  textSize(30);
+  textAlign(CENTER, TOP);
+  text(score, width/2, height/10);
+}
 
 
 float heading2D(PVector pvect)
