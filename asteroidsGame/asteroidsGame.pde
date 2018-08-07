@@ -1,3 +1,8 @@
+import processing.sound.*;
+SoundFile fire;  // Lazer sound "8-bit Laser.aif" by timgormly on freesound.com
+SoundFile destroyed;  // Explosion sound "8-bit Explosion.aif" by timgormly on freesound.com
+SoundFile backgroundMusic;  // Background music song "Cammipple.mp3" by ShnitzelKiller on freesound.com
+
 
 Ship ship;
 
@@ -13,6 +18,8 @@ int numAsteroids = 3; //the number of asteroids
 int startingRadius = 50; //the size of an asteroid
 int score; // The player's score for the level
 int timer; // The game timer
+int savedTime;
+int texty; // y for credits
 
 
 PImage asteroidPic;
@@ -30,28 +37,29 @@ public final int PLAY = 2;
 public final int PAUSE = 3;
 public final int GAMEOVER = 4;
 public final int LEVELCLEAR = 5;
+public final int CREDITS = 6;
 
 
 
 void setup()
 {
- background(0);
- size(800,500);
- font = createFont("Cambria", 32); 
- frameRate(24);
+  savedTime = millis();
+  background(0);
+  size(800,500);
+  font = createFont("Cambria", 32); 
+  frameRate(24);
  
- asteroidPic = loadImage("asteroid.png");
- rocket = loadImage("rocket.png");
+  asteroidPic = loadImage("asteroid.png");
+  rocket = loadImage("rocket.png");
  
- asteroids = new ArrayList<Asteroid>(0);
+  asteroids = new ArrayList<Asteroid>(0);
  
- gameState = INTRO;
+  gameState = INTRO;
 }
 
 
 void draw()
 {  
-  
   switch(gameState) 
   {
     case INTRO:
@@ -61,23 +69,38 @@ void draw()
       drawScreen("PAUSED", "Press p to resume");
       break;
     case GAMEOVER:
+      backgroundMusic.stop();
       drawScreen("GAME OVER", "Press s to try again");
       break;
     case LEVELCLEAR:
+      backgroundMusic.stop();
       drawScreen("LEVEL CLEARED", "Press s to try again");
+      break;
+    case CREDITS:
+      backgroundMusic.stop();
+      drawCredits();
       break;
     case PLAY:
       background(0);
       
-      drawScore(score);
+      timer = (millis()-savedTime)/1000;
+      
+      drawScore(timer, score);
       
       ship.update();
-      ship.render(); 
+      ship.render();
       
-      if(ship.checkCollision(asteroids) || timer <= 0)
-             gameState = GAMEOVER;
+      
+      destroyed = new SoundFile(this, "destroyed.aiff");
+      
+      if( ship.checkCollision(asteroids) || timer >= 30 || asteroids.size() <=0 )
+      {
+            destroyed.play();
+            gameState = GAMEOVER;
+      }     
       // Determines the score required according to the number of asteroids in the level
-      else if ( asteroids.size() <=0 || score >= numAsteroids*40 )
+      // Checks that the timer is greater than 0
+      else if ( score >= numAsteroids*40 && timer < 30 )
       {
              gameState = LEVELCLEAR;
       }
@@ -99,8 +122,8 @@ void draw()
  
           for(int i=0; i<asteroids.size(); i++)//(Asteroid a : asteroids)
           {
-             asteroids.get(i).update();            
-             asteroids.get(i).render(); 
+            asteroids.get(i).update();            
+            asteroids.get(i).render();
           }
           
          float theta = heading2D(ship.rotation)+PI/2;    
@@ -129,7 +152,6 @@ void initializeGame()
    bullets = new ArrayList<Bullet>();   
    asteroids = new ArrayList<Asteroid>();
    score = 0;
-   timer = 30;
    
    for(int i = 0; i <numAsteroids; i++)
    {
@@ -143,7 +165,10 @@ void initializeGame()
 void fireBullet()
 { 
   println("fire");//this line is for debugging purpose
-
+  
+  fire = new SoundFile(this, "fire.aiff");
+  fire.play();
+  
   PVector pos = new PVector(0, ship.r*2);
   rotate2D(pos,heading2D(ship.rotation) + PI/2);
   pos.add(ship.position);
@@ -159,15 +184,27 @@ void keyPressed()
   if(key== 's' && ( gameState==INTRO || gameState==GAMEOVER )) 
   {
     initializeGame();  
-    gameState=PLAY;    
+    gameState=PLAY;
+    backgroundMusic = new SoundFile(this, "backgroundMusic.mp3");
+    backgroundMusic.play();
+  }
+  
+  if(key== 'c')
+  {
+    gameState=CREDITS;
   }
   
   
   if(key=='p' && gameState==PLAY)
+  {
     gameState=PAUSE;
+    backgroundMusic.stop();
+  }
   else if(key=='p' && gameState==PAUSE)
+  {
     gameState=PLAY;
-  
+    backgroundMusic.play();
+  }
   
   //when space key is pressed, fire a bullet
   if(key == ' ' && gameState == PLAY)
@@ -229,13 +266,39 @@ void drawScreen(String title, String instructions)
 }
 
 
-void drawScore(int score)
+void drawScore(int timer, int score)
 {
-  background(0,0,0,0);
+  background(0);
+  
+  // draw time passed
+  fill(255,100,0);
+  textSize(30);
+  textAlign(CENTER, BOTTOM);
+  text(timer, width/2, height/10);
+  
+  // draw score
   fill(255,255,255);
   textSize(30);
   textAlign(CENTER, TOP);
-  text(score, width/2, height/10);
+  text("Current Score: " + score, width/2, height/10);
+}
+
+
+void drawCredits()
+{
+  font = loadFont("AgencyFB-Reg-20.vlw");
+  background(0,0,0,0);
+  textFont(font, 32);
+  textAlign(CENTER);
+  text("A game modified by \n" + 
+       "Programmer: Danny Luong",
+       width/2, height - texty);
+       texty += 1;
+  // Returns to the title screen when credits end
+  if (texty == height)
+  {
+    gameState = INTRO;
+  }
 }
 
 

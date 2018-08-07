@@ -9,6 +9,7 @@ class Asteroid
  int col = 100;
  int health;    // Health of the Asteroid
  PImage pic;
+ boolean destroy;
 
  
  public Asteroid(PVector pos, float radius_, PImage pics_)

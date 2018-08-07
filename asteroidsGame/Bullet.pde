@@ -21,7 +21,7 @@ class Bullet
      PVector dist = PVector.sub(position, a.position);
      if(dist.mag() < a.radius)
      { 
-      a.hit(asteroids);      
+      a.hit(asteroids);
       return true;
      }
    }
