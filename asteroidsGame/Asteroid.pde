@@ -7,15 +7,27 @@ class Asteroid
  PVector rotation;
  float spin;
  int col = 100;
- int health;    // Health of the Asteroid
  PImage pic;
- boolean destroy;
-
+ int health;
+ float r;
+ boolean special;
  
  public Asteroid(PVector pos, float radius_, PImage pics_)
  {
    radius  = radius_;
-   health = 100;
+   r = random(1, 10);
+   
+   // Generate Normal and Special asteroids based on the random value r
+   if ( r <= 9 )
+   {
+     health = 100;
+     special = false;
+   }
+   else
+   {
+     special = true;
+   }
+   
    position = pos;
    float angle = random(2 * PI);
    velocity = new PVector(cos(angle), sin(angle));
@@ -29,12 +41,24 @@ class Asteroid
  
  void hit(ArrayList<Asteroid> asteroids)
  {
-   // Asteroid takes 10 damage per hit
-   health-=10;
-   // Destroy the asteroid when its health hits 0
-   if (health <= 0)
+   // 100HP asteroids
+   if( !special )
    {
-     asteroids.remove(this);
+     health-=10;
+     if( health <= 0 )
+     {
+       asteroids.remove(this);
+     }
+   }
+   // If special asteroid
+   else if ( special )
+   {
+     float rand = random(0, 10);
+     // 30% chance of being destroyed
+     if ( rand > 7 )
+     {
+       asteroids.remove(this);
+     }
    }
  }
  
@@ -72,9 +96,8 @@ class Asteroid
     
     if (position.y > height)
       position.y = 0;     
- }   
-   
-
+ }
+ 
 
 
 /* float heading2D(PVector pvect)
